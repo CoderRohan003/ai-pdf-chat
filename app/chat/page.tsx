@@ -38,9 +38,22 @@ export default function ChatPage() {
             });
 
             const data = await res.json();
+
             if (data.answer) {
-                const aiMessage: Message = { sender: "ai", text: data.answer };
-                setMessages((prev) => [...prev, aiMessage]);
+                const words = data.answer.split(" ");
+                let generatedText = "";
+                for (let i = 0; i < words.length; i++) {
+                    await new Promise((res) => setTimeout(res, 30));
+                    generatedText += (i > 0 ? " " : "") + words[i];
+                    setMessages((prev) => {
+                        const lastMsg = prev[prev.length - 1];
+                        if (lastMsg?.sender === "ai") {
+                            return [...prev.slice(0, -1), { sender: "ai", text: generatedText }];
+                        } else {
+                            return [...prev, { sender: "ai", text: generatedText }];
+                        }
+                    });
+                }
             } else {
                 alert("No answer received.");
             }
@@ -70,17 +83,25 @@ export default function ChatPage() {
 
             {/* Chat area */}
             <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+
                 {messages.map((msg, index) => (
                     <div
                         key={index}
-                        className={`max-w-lg px-4 py-2 rounded-lg ${msg.sender === "user"
-                                ? "bg-gray-100 self-end ml-auto text-black"
-                                : "bg-gray-700 self-start mr-auto text-white"
-                            }`}
+                        className={`w-full flex ${msg.sender === "ai" ? "justify-start" : "justify-end"} ${msg.sender === "ai" ? "mb-8" : "mb-2"}`}
                     >
-                        {msg.text}
+                        <div
+                            className={`px-4 py-2 rounded-lg whitespace-pre-wrap break-words ${msg.sender === "ai"
+                                    ? "bg-gray-700 text-white max-w-lg"
+                                    : "bg-gray-100 text-black max-w-[80%]"
+                                }`}
+                        >
+                            {msg.text}
+                        </div>
                     </div>
                 ))}
+
+
+
                 <div ref={bottomRef} />
             </div>
 
@@ -104,20 +125,26 @@ export default function ChatPage() {
                     <button
                         type="submit"
                         disabled={loading || !question.trim()}
-                        className={`absolute top-1/2 right-2 -translate-y-1/2 flex items-center justify-center bg-white text-black hover:bg-gray-300 transition-all duration-300 ease-in-out ${question.trim() ? "w-10 h-10 rounded-full" : "w-auto h-auto rounded-md px-3 py-2"}`}
+                        className={`absolute top-1/2 right-2 -translate-y-1/2 flex items-center justify-center bg-white text-black hover:bg-gray-300 transition-all duration-300 ease-in-out ${question.trim()
+                            ? "w-10 h-10 rounded-full"
+                            : "w-auto h-auto rounded-md px-3 py-2"
+                            }`}
                     >
                         <span
-                            className={`transition-opacity duration-300 ease-in-out ${question.trim() ? "opacity-0 pointer-events-none" : "opacity-100"}`}
+                            className={`transition-opacity duration-300 ease-in-out ${question.trim()
+                                ? "opacity-0 pointer-events-none"
+                                : "opacity-100"
+                                }`}
                         >
                             Send
                         </span>
                         <span
-                            className={`absolute text-2xl font-bold transition-opacity duration-300 ease-in-out ${question.trim() ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+                            className={`absolute text-2xl font-bold transition-opacity duration-300 ease-in-out ${question.trim() ? "opacity-100" : "opacity-0 pointer-events-none"
+                                }`}
                         >
                             ↑
                         </span>
                     </button>
-                    
                 </form>
             </div>
         </div>
